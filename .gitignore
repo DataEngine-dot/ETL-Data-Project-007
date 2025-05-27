@@ -1,1 +1,28 @@
-.env/
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+
+# pycache
+*/__pycache__/
+*/.pytest_cache
+
+# venv
+venv/
+
+#database credentials
+terraform/*.tfvars
+
+#dependencies for zipping
+terraform/zips/ingestion_files/*
+terraform/zips/processing_files/*
+terraform/zips/population_files/*
+terraform/zips/*.zip
+
+# Other files
+.DS_Store
+.coverage
