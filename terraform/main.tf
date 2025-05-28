@@ -13,10 +13,10 @@ provider "aws" {
   profile = "test-account"
 }
 
-resource "aws_s3_bucket" "ingestion_bucket" {
-  bucket = "ingestion-zone-007"
-}
 
+data "aws_s3_bucket" "ingestion-zone-007"{
+  bucket="ingestion-zone-007"
+}
 
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
