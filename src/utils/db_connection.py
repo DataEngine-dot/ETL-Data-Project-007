@@ -1,6 +1,5 @@
 import os
 from pg8000.native import Connection
-from secret import get_secrets
 import boto3
 from botocore.exceptions import ClientError
 import json
@@ -28,7 +27,7 @@ def connect_to_db(credentials):
         password=credentials["DB_PASSWORD"],
         database=credentials["DB_NAME"],
         host=credentials["DB_HOST"],
-        port=int(credentials["DB_POST"])
+        port=int(credentials["DB_PORT"])
     )
 
 
