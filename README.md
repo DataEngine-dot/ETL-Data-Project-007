@@ -70,7 +70,16 @@ The project demonstrates practical use of:
 - [ ] Final testing & deployment
 
 ---
+## 🔧 Setup
+
+Copy the example environment file and update it with your local values:
+
+```bash
+cp .env.example .env
+---
+
 ## How to Run
+
 
 ```bash
 # Deploy infrastructure
