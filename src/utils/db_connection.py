@@ -1,23 +1,50 @@
 import os
 from pg8000.native import Connection
-from dotenv import load_dotenv
+import boto3
+from botocore.exceptions import ClientError
+import json
+from pprint import pprint
+from sql_func import select_all_query
 
-load_dotenv()
 
-def connect_to_db():
+def get_secrets(secretname="TotesysDatabase"):
+    """This functions gets the credentials for totesys database from 
+    secret manager using boto3
+    returns - dict"""
+    try:
+        session = boto3.Session(profile_name="test-account")
+        sm_client = session.client("secretsmanager")
+        response = sm_client.get_secret_value(SecretId=secretname)
+    except ClientError as e:
+        raise e
+    return json.loads(response['SecretString'])
+
+
+def connect_to_db(credentials):
+    """This function connects to the database. 
+    parameter - dict (we get this from boto3 secret manager)"""
     return Connection(
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME"),
-        host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT"))
+        user=credentials["DB_USER"],
+        password=credentials["DB_PASSWORD"],
+        database=credentials["DB_NAME"],
+        host=credentials["DB_HOST"],
+        port=int(credentials["DB_PORT"])
     )
+
+
+def close_db(db):
+    db.close()
+
 
 if __name__ == "__main__":
     try:
-        conn = connect_to_db()
+        totesys_credentials = get_secrets()
+        conn = connect_to_db(totesys_credentials)
         print("Connected to database!")
-        conn.close()
+        payment = select_all_query(conn,"payment")
+
+        pprint(payment)
     except Exception as e:
         print(f"Failed to connect: {e}")
-
+    finally:
+        close_db(conn)

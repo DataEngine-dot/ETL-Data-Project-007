@@ -4,6 +4,7 @@ crash.log
 # pycache
 */__pycache__/
 */.pytest_cache
+__pycache__/
 
 # venv
 venv/
@@ -11,8 +12,16 @@ venv/
 # env
 .env
 
-
-
 # Other files
 .DS_Store
 .coverage
+
+# Terraform lock file
+**/.terraform.lock.hcl
+
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
