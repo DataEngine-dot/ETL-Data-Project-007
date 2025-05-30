@@ -1,10 +1,13 @@
 def select_all_query(conn, table_name):
+    """sql query that gathers every row of the record from a table
+    parameter:
+        conn -- connection to the database
+        table_name -- the table name you want to gather
+    return:
+        list of data"""
     try:
-        # return conn.run(f"""SELECT * FROM {table_name} 
-        #                 WHERE last_updated > now() - INTERVAL '30 minutes'""")
-        return conn.run(f"SELECT now(), last_updated FROM {table_name};")
+        return conn.run(f"SELECT * FROM {table_name}")
+    
     except Exception as err:
         raise err
     
-    # f"SELECT last_updated FROM {table} WHERE "
-    #         f"last_updated > now() - INTERVAL '{interval}' LIMIT 1;"
