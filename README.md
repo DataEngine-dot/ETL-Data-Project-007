@@ -14,16 +14,15 @@ The project demonstrates practical use of:
 - Data warehousing principles
 - Automated testing and security auditing
 
----
 
 ## Architecture Overview
 
 ```txt
-+-------------+       +-------------+       +-------------+       +-------------+
++-------------+       +-------------+       +----------------+      +----------------+
 |  ToteSys DB | --->  |  Ingestion  | --->  | Transformation | ---> | Data Warehouse |
-+-------------+       +-------------+       +-------------+       +-------------+
++-------------+       +-------------+       +----------------+      +----------------+
 ```
----
+
 
 ## Features
 
@@ -35,7 +34,7 @@ The project demonstrates practical use of:
 - Security checks with `bandit`, `pip-audit`
 - Unit tests using `pytest`
 
----
+
 
 ## Tech Stack
 
@@ -48,7 +47,6 @@ The project demonstrates practical use of:
 | Testing      | Pytest, pip-audit, bandit             |
 | Visualisation| AWS QuickSight / Jupyter Notebook     |
 
----
 
 ## Development Phases
 
@@ -58,25 +56,23 @@ The project demonstrates practical use of:
 4. **Visualisation** – QuickSight dashboards + analysis
 5. **CI/CD & Security** – Full pipeline, testing, and automation
 
----
 
 ## Project Status
 
-> _[Update this section as progress continues]_  
+<!-- > _[Update this section as progress continues]_   -->
 - [x] Ingestion Lambda live  
 - [ ] Transformation tested  
 - [ ] Warehouse integration in progress  
 - [ ] Visualisation configured  
 - [ ] Final testing & deployment
 
----
+
 ## 🔧 Setup
 
 Copy the example environment file and update it with your local values:
 
 ```bash
 cp .env.example .env
----
 
 ## How to Run
 
@@ -86,5 +82,5 @@ cp .env.example .env
 make terraform-init
 make terraform-apply
 
----
+
 
