@@ -3,7 +3,8 @@ from pg8000.native import Connection
 import boto3
 from botocore.exceptions import ClientError
 import json
-
+from pprint import pprint
+from sql_func import select_all_query
 
 
 def get_secrets(secretname="TotesysDatabase"):
@@ -40,9 +41,10 @@ if __name__ == "__main__":
         totesys_credentials = get_secrets()
         conn = connect_to_db(totesys_credentials)
         print("Connected to database!")
-        conn.close()
+        payment = select_all_query(conn,"payment")
+
+        pprint(payment)
     except Exception as e:
         print(f"Failed to connect: {e}")
-
-
-
+    finally:
+        close_db(conn)
