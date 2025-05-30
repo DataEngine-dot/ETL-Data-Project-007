@@ -11,6 +11,7 @@ venv/
 
 # env
 .env
+.env.test
 
 # Other files
 .DS_Store
