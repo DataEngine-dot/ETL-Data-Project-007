@@ -79,8 +79,8 @@ cp .env.example .env
 
 ```bash
 # Deploy infrastructure
-make terraform-init
-make terraform-apply
+make tf-init
+make tf-apply
 
 
 

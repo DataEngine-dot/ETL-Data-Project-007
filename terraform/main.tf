@@ -1,23 +1,20 @@
-# Generate a unique suffix if no bucket name is provided
+# Generate a unique suffix for S3 bucket name if var.bucket_name is empty
 resource "random_id" "bucket_suffix" {
   byte_length = 4
 
-  # Force regeneration if bucket_name is not set
-  # If bucket_name is empty, we trigger new ID each run
   keepers = {
+    # Trigger regeneration only when no bucket name is provided
     trigger = var.bucket_name == "" ? timestamp() : ""
   }
 }
 
-# Create an S3 bucket
+# Create the ingestion S3 bucket, using either a provided name or a unique one
 resource "aws_s3_bucket" "ingestion_bucket" {
-  # If bucket_name is provided, use it. Otherwise, construct a unique name.
-  bucket = var.bucket_name != "" ? var.bucket_name : "data-ingestion-bucket-${random_id.bucket_suffix.hex}"
-
-  force_destroy = true # Allows deleting bucket even if it contains objects
+  bucket        = var.bucket_name != "" ? var.bucket_name : "data-ingestion-bucket-${random_id.bucket_suffix.hex}"
+  force_destroy = true  # Allow deletion even if bucket contains objects
 }
 
-# Add a bucket policy that allows Lambda, CloudWatch, EventBridge access
+# Define a bucket policy allowing Lambda, EventBridge, and CloudWatch Logs services access to S3
 resource "aws_s3_bucket_policy" "bucket_policy" {
   bucket = aws_s3_bucket.ingestion_bucket.id
 
@@ -25,19 +22,19 @@ resource "aws_s3_bucket_policy" "bucket_policy" {
     Version = "2012-10-17",
     Statement = [
       {
-        Sid = "AllowServicesAccess",
-        Effect = "Allow",
+        Sid       = "AllowServicesAccess"
+        Effect    = "Allow"
         Principal = {
           Service = [
             "lambda.amazonaws.com",
             "events.amazonaws.com",
             "logs.amazonaws.com"
           ]
-        },
-        Action = [
+        }
+        Action   = [
           "s3:GetObject",
           "s3:PutObject"
-        ],
+        ]
         Resource = "${aws_s3_bucket.ingestion_bucket.arn}/*"
       }
     ]

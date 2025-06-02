@@ -26,3 +26,12 @@ venv/
 # .tfstate files
 *.tfstate
 *.tfstate.*
+
+terraform.tfvars
+
+# Ignore build artifacts
+builds/
+*.zip
+
+/package/
+lambda_build/
