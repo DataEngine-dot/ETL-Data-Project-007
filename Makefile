@@ -1,51 +1,80 @@
-# Path to the virtual environment directory
+# ---------------------------------------------------------------------
+# CONFIGURATION
+# ---------------------------------------------------------------------
+
 VENV_PATH = venv
 PYTHON = $(VENV_PATH)/bin/python
 PIP = $(VENV_PATH)/bin/pip
 
-# ------------------------------------------------------------------------------
-# Create a virtual environment in the specified folder (default: ./venv)
-# Usage: make venv
-# ------------------------------------------------------------------------------
+LAMBDA_BUILD_DIR = builds
+LAMBDA_ZIP_NAME = ingestion-lambda.zip
+LAMBDA_ZIP_PATH = $(LAMBDA_BUILD_DIR)/$(LAMBDA_ZIP_NAME)
+LAYER_ZIP_NAME = lambda-layer.zip
+LAYER_ZIP_PATH = $(LAMBDA_BUILD_DIR)/$(LAYER_ZIP_NAME)
+
+PACKAGE_DIR = lambda_build
+LAYER_DIR = lambda_layer/python
+
+# ---------------------------------------------------------------------
+# ENVIRONMENT SETUP
+# ---------------------------------------------------------------------
+
 venv:
 	python -m venv $(VENV_PATH)
 
-# ------------------------------------------------------------------------------
-# Install all required Python packages from requirements.txt
-# Usage: make install
-# Requires: make venv should be run beforehand
-# ------------------------------------------------------------------------------
 install:
 	$(PIP) install -r requirements.txt
 
-# ------------------------------------------------------------------------------
-# Run tests using pytest
-# Usage: make test
-# ------------------------------------------------------------------------------
-test:
-	@echo "Running pytest..."
-	pytest -vvvrP
+# ---------------------------------------------------------------------
+# CLEANUP
+# ---------------------------------------------------------------------
 
+clean:
+# Remove build and temporary directories
+	rm -rf $(PACKAGE_DIR) $(LAYER_DIR) $(LAMBDA_BUILD_DIR)
 
-# ------------------------------------------------------------------------------
-# Initialize the Terraform working directory
-# Usage: make tf-init
-# ------------------------------------------------------------------------------
+clean-layer:
+	rm -rf lambda_layer
+
+# ---------------------------------------------------------------------
+# BUILD LAMBDA FUNCTION CODE ONLY (no dependencies)
+# ---------------------------------------------------------------------
+
+build-lambda:
+	@echo "Packaging Lambda code only (without dependencies)..."
+	rm -rf $(PACKAGE_DIR)
+	mkdir -p $(PACKAGE_DIR)
+	mkdir -p $(LAMBDA_BUILD_DIR)
+	cp ingestion.py $(PACKAGE_DIR)/
+	cp -r utils $(PACKAGE_DIR)/
+	cd $(PACKAGE_DIR) && zip -r ../$(LAMBDA_ZIP_PATH) .
+
+# ---------------------------------------------------------------------
+# BUILD LAMBDA LAYER (dependencies only)
+# ---------------------------------------------------------------------
+
+build-layer:
+	@echo "Packaging Lambda Layer with all dependencies ..."
+	mkdir -p $(LAYER_DIR)
+	pip install -r requirements.txt --target=$(LAYER_DIR)
+	cd lambda_layer && zip -r ../$(LAYER_ZIP_PATH) .
+	rm -rf lambda_layer
+
+# ---------------------------------------------------------------------
+# TERRAFORM
+# ---------------------------------------------------------------------
+
 tf-init:
 	cd terraform && terraform init
 
-# ------------------------------------------------------------------------------
-# Apply the Terraform configuration to provision resources
-# Usage: make tf-apply
-# ------------------------------------------------------------------------------
-tf-apply:
+tf-apply: build-lambda build-layer
 	cd terraform && terraform apply -auto-approve
 
-# ------------------------------------------------------------------------------
-# Destroy the Terraform-managed infrastructure
-# Usage: make tf-destroy
-# ------------------------------------------------------------------------------
 tf-destroy:
 	cd terraform && terraform destroy -auto-approve
 
-all: venv install tf-init tf-apply
+# ---------------------------------------------------------------------
+# FULL WORKFLOW
+# ---------------------------------------------------------------------
+
+all: clean venv install tf-init tf-apply
