@@ -23,7 +23,7 @@ resource "aws_s3_object" "lambda_zip" {
 # Define the Lambda function and its configuration
 resource "aws_lambda_function" "ingestion" {
   function_name = "ingestion-lambda"
-  role          = aws_iam_role.lambda_exec.arn
+  role          = data.aws_iam_role.lambda_exec.arn
   handler       = "ingestion.main"
   runtime       = "python3.11"
   timeout       = 60

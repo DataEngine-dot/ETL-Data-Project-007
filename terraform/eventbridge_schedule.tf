@@ -20,36 +20,40 @@ resource "aws_cloudwatch_event_target" "lambda_trigger" {
 }
 
 # Allow EventBridge to invoke the Lambda function by attaching necessary permission
-resource "aws_lambda_permission" "allow_eventbridge" {
-  statement_id  = "AllowExecutionFromEventBridge"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.ingestion.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.lambda_schedule.arn
+# resource "aws_lambda_permission" "allow_eventbridge" {
+#   statement_id  = "AllowExecutionFromEventBridge"
+#   action        = "lambda:InvokeFunction"
+#   function_name = aws_lambda_function.ingestion.function_name
+#   principal     = "events.amazonaws.com"
+#   source_arn    = aws_cloudwatch_event_rule.lambda_schedule.arn
+# }
+
+data "aws_iam_policy" "lambda_logging" {
+  name = "lambda-logging"
 }
 
 # Create a custom IAM policy allowing the Lambda to write logs to CloudWatch
-resource "aws_iam_policy" "lambda_logging" {
-  name = "lambda-logging"
+# resource "aws_iam_policy" "lambda_logging" {
+#   name = "lambda-logging"
 
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:CreateLogGroup"
-        ],
-        Resource = "arn:aws:logs:*:*:log-group:/aws/lambda/ingestion-lambda*"
-      }
-    ]
-  })
-}
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "logs:CreateLogStream",
+#           "logs:PutLogEvents",
+#           "logs:CreateLogGroup"
+#         ],
+#         Resource = "arn:aws:logs:*:*:log-group:/aws/lambda/ingestion-lambda*"
+#       }
+#     ]
+#   })
+# }
 # Attach the logging policy to the Lambda execution role
 resource "aws_iam_role_policy_attachment" "lambda_logging_attachment" {
-  role       = aws_iam_role.lambda_exec.name
-  policy_arn = aws_iam_policy.lambda_logging.arn
+  role       = data.aws_iam_role.lambda_exec.name
+  policy_arn = data.aws_iam_policy.lambda_logging.arn
 }
 
