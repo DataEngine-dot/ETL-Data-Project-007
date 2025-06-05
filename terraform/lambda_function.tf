@@ -29,13 +29,13 @@ resource "aws_lambda_layer_version" "all_deps_layer" {
 # Define the Lambda function and its configuration
 resource "aws_lambda_function" "ingestion" {
   function_name = "ingestion-lambda"
-  role          = aws_iam_role.lambda_exec.arn
+  role          = aws_iam_role.lambda_role.arn
   handler       = "ingestion.main"
   runtime       = "python3.11"
   timeout       = 60
   filename      = data.archive_file.init.output_path
-  s3_bucket = aws_s3_bucket.ingestion_bucket.id
-  s3_key = data.archive_file.init.output_path #
+  # s3_bucket = aws_s3_bucket.ingestion_bucket.id
+  # s3_key = data.archive_file.init.output_path #
 #TODO filename = archive_file.output_path
 # archive_file.output_base64sha256
   source_code_hash = data.archive_file.init.output_base64sha256

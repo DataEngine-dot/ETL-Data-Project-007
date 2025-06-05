@@ -24,3 +24,8 @@ variable "db_password" {
 variable "s3_ingestion_bucket" {
   type        = string
 }
+
+variable "lambda_name" {
+    type = string
+    default = "ingestion-lambda"
+}

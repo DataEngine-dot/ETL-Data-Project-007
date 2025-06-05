@@ -16,28 +16,34 @@ resource "aws_s3_bucket" "ingestion_bucket" {
 # Terraform can do this for you, and manage its state - use bucket_prefix attribute
 
 # Define a bucket policy allowing Lambda, EventBridge, and CloudWatch Logs services access to S3
-resource "aws_s3_bucket_policy" "bucket_policy" {
-  bucket = aws_s3_bucket.ingestion_bucket.id
+# resource "aws_s3_bucket_policy" "bucket_policy" {
+#   bucket = aws_s3_bucket.ingestion_bucket.id
+#   policy = data.aws_iam_policy_document.s3_document.json
+# }
 
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Sid       = "AllowServicesAccess"
-        Effect    = "Allow"
-        Principal = {
-          Service = [
-            "lambda.amazonaws.com",
-            "events.amazonaws.com",
-            "logs.amazonaws.com"
-          ]
-        }
-        Action   = [
-          "s3:GetObject",
-          "s3:PutObject"
-        ]
-        Resource = "${aws_s3_bucket.ingestion_bucket.arn}/*"
-      }
-    ]
-  })
-}
+
+# resource "aws_s3_bucket_policy" "bucket_policy" {
+#   bucket = aws_s3_bucket.ingestion_bucket.id
+
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Sid       = "AllowServicesAccess"
+#         Effect    = "Allow"
+#         Principal = {
+#           Service = [
+#             "lambda.amazonaws.com",
+#             "events.amazonaws.com",
+#             "logs.amazonaws.com"
+#           ]
+#         }
+#         Action   = [
+#           "s3:GetObject",
+#           "s3:PutObject"
+#         ]
+#         Resource = "${aws_s3_bucket.ingestion_bucket.arn}/*"
+#       }
+#     ]
+#   })
+# }

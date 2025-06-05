@@ -7,7 +7,7 @@ import io
 from datetime import datetime, timezone
 from io import StringIO
 import boto3
-import watchtower
+# import watchtower
 from botocore.exceptions import ClientError
 from pprint import pprint
 from pg8000 import connect
@@ -15,13 +15,18 @@ from pg8000 import connect
 
 # TODO: This is where you will use python to read from your 'last updated' JSON use the event, context or the greatest value timestamp in the the data being extracted, then WRITE the relevant timestamp back to your JSON/S3, (this lambda will need permissions)
 # --- Logging setup ---
-LOG_GROUP = os.getenv("LOG_GROUP", "/aws/lambda/ingestion-lambda")
-logger = logging.getLogger("ingestion-logger")
+# LOG_GROUP = os.getenv("LOG_GROUP", "/aws/lambda/ingestion-lambda")
+
+# logger = logging.getLogger()
+# logger.setLevel(logging.INFO)
+
+logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler())
-logger.addHandler(
-    watchtower.CloudWatchLogHandler(log_group=LOG_GROUP, create_log_group=True)
-)
+
+# logger.addHandler(logging.StreamHandler())
+# logger.addHandler(
+#     watchtower.CloudWatchLogHandler(log_group=LOG_GROUP, create_log_group=True)
+# )
 
 # --- SNS client for sending success/failure alerts ---
 SNS_TOPIC_ARN = os.getenv(
