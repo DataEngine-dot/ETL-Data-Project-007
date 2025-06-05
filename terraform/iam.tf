@@ -117,7 +117,8 @@ resource "aws_iam_policy" "lambda_s3_write_policy" {
       {
         Effect = "Allow",
         Action = [
-          "s3:PutObject"
+          "s3:PutObject",
+          "s3:GetObject"
         ],
         Resource = "arn:aws:s3:::${var.bucket_name}/*"
       }

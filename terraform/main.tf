@@ -1,16 +1,16 @@
-# Generate a unique suffix for S3 bucket name if var.bucket_name is empty
-resource "random_id" "bucket_suffix" {
-  byte_length = 4
+# # Generate a unique suffix for S3 bucket name if var.bucket_name is empty
+# resource "random_id" "bucket_suffix" {
+#   byte_length = 4
 
-  keepers = {
-    # Trigger regeneration only when no bucket name is provided
-    trigger = var.bucket_name == "" ? timestamp() : ""
-  }
-}
+#   keepers = {
+#     # Trigger regeneration only when no bucket name is provided
+#     trigger = var.bucket_name == "" ? timestamp() : ""
+#   }
+# }
 
 # Create the ingestion S3 bucket, using either a provided name or a unique one
 resource "aws_s3_bucket" "ingestion_bucket" {
-  bucket        = var.bucket_name != "" ? var.bucket_name : "data-ingestion-bucket-${random_id.bucket_suffix.hex}"
+  bucket_prefix        = "ingestion-zone-extraction"
   force_destroy = true  # Allow deletion even if bucket contains objects
 }
 # Terraform can do this for you, and manage its state - use bucket_prefix attribute

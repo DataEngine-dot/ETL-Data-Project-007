@@ -11,11 +11,13 @@ terraform {
     }
   }
 #TODO:
-#  backend "s3" {
-#    bucket = "somename" (This bucket need to be created OUTSIDE of terraform)
-#    key = "state_file.tfstate"
-#  }
-
+ backend "s3" {
+   bucket = "ingestion-zone-extraction"
+   key = "terraform.tfstate"
+   region= "eu-west-2"
+   encrypt = true
+  }
+  
   required_version = ">= 1.0"  # Ensure Terraform CLI version is 1.0 or higher
 }
 
