@@ -5,6 +5,12 @@ resource "aws_s3_object" "all_deps_layer" {
   source = "../builds/lambda-layer.zip"
   etag   = filemd5("../builds/lambda-layer.zip")
 }
+
+#TODO: Create a local deployment package using a archive_file block https://registry.terraform.io/providers/hashicorp/archive/latest/docs/data-sources/file
+
+# https://docs.aws.amazon.com/lambda/latest/dg/python-package.html
+
+
 # Register the uploaded Lambda layer in AWS
 resource "aws_lambda_layer_version" "all_deps_layer" {
   layer_name          = "all-deps-layer"
@@ -15,10 +21,10 @@ resource "aws_lambda_layer_version" "all_deps_layer" {
 }
 # Upload the Lambda deployment package (ZIP) to S3
 resource "aws_s3_object" "lambda_zip" {
-  bucket = aws_s3_bucket.ingestion_bucket.id          
-  key    = "ingestion-lambda.zip"               
-  source = "../builds/ingestion-lambda.zip"
-  etag   = filemd5("../builds/ingestion-lambda.zip")
+  bucket = aws_s3_bucket.ingestion_bucket.id #         
+  key    = "ingestion-lambda.zip"            # will no longer need these if you use a local dep-package   
+  source ="../builds/ingestion-lambda.zip" 
+  etag   = filemd5("../builds/ingestion-lambda.zip") 
 }
 # Define the Lambda function and its configuration
 resource "aws_lambda_function" "ingestion" {
@@ -28,10 +34,11 @@ resource "aws_lambda_function" "ingestion" {
   runtime       = "python3.11"
   timeout       = 60
 
-  s3_bucket = aws_s3_bucket.ingestion_bucket.id
-  s3_key    = aws_s3_object.lambda_zip.key
+  s3_bucket = aws_s3_bucket.ingestion_bucket.id #
+  s3_key    = aws_s3_object.lambda_zip.key # not needed 
+#TODO filename = archive_file.output_path
 
-  source_code_hash = filebase64sha256("../builds/ingestion-lambda.zip")
+  source_code_hash = filebase64sha256("../builds/ingestion-lambda.zip") # archive_file.output_base64sha256
   publish = true
 
   environment {

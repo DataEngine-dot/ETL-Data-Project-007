@@ -10,6 +10,11 @@ terraform {
       version = "~> 3.0"  # Use any compatible version from 3.0 up to (but not including) 4.0
     }
   }
+#TODO:
+#  backend "s3" {
+#    bucket = "somename" (This bucket need to be created OUTSIDE of terraform)
+#    key = "state_file.tfstate"
+#  }
 
   required_version = ">= 1.0"  # Ensure Terraform CLI version is 1.0 or higher
 }
