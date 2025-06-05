@@ -13,6 +13,7 @@ resource "aws_s3_bucket" "ingestion_bucket" {
   bucket        = var.bucket_name != "" ? var.bucket_name : "data-ingestion-bucket-${random_id.bucket_suffix.hex}"
   force_destroy = true  # Allow deletion even if bucket contains objects
 }
+# Terraform can do this for you, and manage its state - use bucket_prefix attribute
 
 # Define a bucket policy allowing Lambda, EventBridge, and CloudWatch Logs services access to S3
 resource "aws_s3_bucket_policy" "bucket_policy" {

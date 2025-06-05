@@ -12,38 +12,46 @@ from botocore.exceptions import ClientError
 from pprint import pprint
 from pg8000 import connect
 
+
+# TODO: This is where you will use python to read from your 'last updated' JSON use the event, context or the greatest value timestamp in the the data being extracted, then WRITE the relevant timestamp back to your JSON/S3, (this lambda will need permissions)
 # --- Logging setup ---
 LOG_GROUP = os.getenv("LOG_GROUP", "/aws/lambda/ingestion-lambda")
 logger = logging.getLogger("ingestion-logger")
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
-logger.addHandler(watchtower.CloudWatchLogHandler(log_group=LOG_GROUP, create_log_group=True))
+logger.addHandler(
+    watchtower.CloudWatchLogHandler(log_group=LOG_GROUP, create_log_group=True)
+)
 
 # --- SNS client for sending success/failure alerts ---
-SNS_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN", "arn:aws:sns:eu-west-2:645583760702:ingestion-alerts")
+SNS_TOPIC_ARN = os.getenv(
+    "SNS_TOPIC_ARN", "arn:aws:sns:eu-west-2:645583760702:ingestion-alerts"
+)
 sns_client = boto3.client("sns", region_name="eu-west-2")
 
 # --- S3 client for storing ingested data ---
 S3_BUCKET = os.getenv("S3_BUCKET", "ingestion")
 s3 = boto3.client("s3")
 
+
 # --- SNS notification utilities ---
 def notify_success(message: str):
     send_sns_notification("Ingestion Success", message)
-    
+
+
 def notify_failure(message: str):
     send_sns_notification("Ingestion Failed", message)
-    
+
+
 def send_sns_notification(subject: str, message: str):
     try:
         boto3.client("sns").publish(
-            TopicArn=SNS_TOPIC_ARN,
-            Subject=subject,
-            Message=message
+            TopicArn=SNS_TOPIC_ARN, Subject=subject, Message=message
         )
         logger.info(f"SNS notification sent: {subject}")
     except ClientError as e:
         logger.error(f"Failed to send SNS notification: {e}")
+
 
 # --- Data serialization utilities ---
 def rows_to_csv(rows, columns):
@@ -66,6 +74,7 @@ def rows_to_csv(rows, columns):
         output.write(",".join(escaped) + "\n")
     return output.getvalue()
 
+
 def save_to_s3(table_name, rows, columns):
     """
     Compress and upload table data to S3 in a structured time-based key format.
@@ -76,12 +85,12 @@ def save_to_s3(table_name, rows, columns):
     year = now.strftime("%Y")
     month = now.strftime("%m")
     day = now.strftime("%d")
-    
+
     key = f"{year}/{month}/{day}/{table_name}_{timestamp}.csv.gz"
 
     buffer = io.BytesIO()
-    with gzip.GzipFile(mode='w', fileobj=buffer) as gz:
-        with io.TextIOWrapper(gz, encoding='utf-8') as wrapper:
+    with gzip.GzipFile(mode="w", fileobj=buffer) as gz:
+        with io.TextIOWrapper(gz, encoding="utf-8") as wrapper:
             writer = csv.writer(wrapper)
             writer.writerow(columns)
             writer.writerows(rows)
@@ -90,9 +99,11 @@ def save_to_s3(table_name, rows, columns):
     s3.upload_fileobj(buffer, S3_BUCKET, key)
     logger.info(f"Saved {table_name} with {len(rows)} rows to s3://{S3_BUCKET}/{key}")
 
+
 def get_timestamp():
     """Return current UTC timestamp in ISO 8601 format."""
     return datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+
 
 def get_secrets(secretname="TotesysDatabase"):
     """
@@ -105,9 +116,11 @@ def get_secrets(secretname="TotesysDatabase"):
         response = sm_client.get_secret_value(SecretId=secretname)
     except ClientError as e:
         raise RuntimeError(f"Failed to retrieve secrets: {e}")
-    return json.loads(response['SecretString'])
+    return json.loads(response["SecretString"])
+
 
 # --- Core ingestion logic ---
+
 
 def real_main():
     """
@@ -125,7 +138,9 @@ def real_main():
         db_name = os.getenv("DB_NAME")
 
         if not all([db_user, db_password, db_host, db_name]):
-            logger.info("DB credentials missing in environment, trying Secrets Manager...")
+            logger.info(
+                "DB credentials missing in environment, trying Secrets Manager..."
+            )
             creds = get_secrets()
             db_user = creds.get("DB_USER")
             db_password = creds.get("DB_PASSWORD")
@@ -139,12 +154,14 @@ def real_main():
             password=db_password,
             host=db_host,
             port=db_port,
-            database=db_name
+            database=db_name,
         )
         cursor = conn.cursor()
 
         # Retrieve list of all public tables
-        cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public';")
+        cursor.execute(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
+        )
         tables = [row[0] for row in cursor.fetchall()]
 
         total_rows = 0
@@ -174,6 +191,7 @@ def real_main():
         logger.error(error_msg)
         notify_failure(error_msg)
         raise
+
 
 # --- Lambda handler (entry point for AWS Lambda) ---
 def main(event, context):
