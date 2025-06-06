@@ -1,3 +1,18 @@
+# Upload the Lambda layer ZIP file to S3
+resource "aws_s3_object" "all_deps_layer" {
+  bucket = data.aws_s3_bucket.ingestion_bucket.id
+  key    = "lambda-layer.zip"
+  source = "../builds/lambda-layer.zip"
+  etag   = filemd5("../builds/lambda-layer.zip")
+}
+# Register the uploaded Lambda layer in AWS
+resource "aws_lambda_layer_version" "all_deps_layer" {
+  layer_name          = "all-deps-layer"
+  compatible_runtimes = ["python3.11"]
+  s3_bucket           = data.aws_s3_bucket.ingestion_bucket.id
+  s3_key              = aws_s3_object.all_deps_layer.key
+  source_code_hash    = filebase64sha256("../builds/lambda-layer.zip")
+}
 #TODO: Create a local deployment package using a archive_file block https://registry.terraform.io/providers/hashicorp/archive/latest/docs/data-sources/file
 # Archive a single file.
 
@@ -34,7 +49,7 @@ resource "aws_lambda_function" "ingestion" {
       LOG_GROUP      = "/aws/lambda/ingestion-lambda"
     }
   }
-
+  layers = [aws_lambda_layer_version.all_deps_layer.arn]
 }
 
 
