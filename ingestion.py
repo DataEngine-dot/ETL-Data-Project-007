@@ -13,7 +13,8 @@ from pprint import pprint
 from pg8000 import connect
 
 
-# TODO: This is where you will use python to read from your 'last updated' JSON use the event, context or the greatest value timestamp in the the data being extracted, then WRITE the relevant timestamp back to your JSON/S3, (this lambda will need permissions)
+# TODO: This is where you will use python to read from your 'last updated' JSON use the event, context or the greatest value timestamp 
+# in the the data being extracted, then WRITE the relevant timestamp back to your JSON/S3, (this lambda will need permissions)
 # --- Logging setup ---
 # LOG_GROUP = os.getenv("LOG_GROUP", "/aws/lambda/ingestion-lambda")
 
@@ -126,6 +127,31 @@ def get_secrets(secretname="TotesysDatabase"):
 
 # --- Core ingestion logic ---
 
+def get_default_timestamps(TABLES):
+    """creates initial timestamp"""
+    return {table: "1970-01-01T00:00:00Z" for table in TABLES}
+
+
+def read_ingestion_times(TABLES):
+    """reads ingestion timestamp but if it cant, it creates an initial timestamp"""
+    try:
+        obj = s3.get_object(Bucket=S3_BUCKET, Key="last_ingested.json")
+        content = obj["Body"].read().decode("utf-8")
+        return json.loads(content)
+    except s3.exceptions.NoSuchKey:
+        logger.warning("No previous ingestion record, initializing with 1970.")
+        return get_default_timestamps(TABLES)
+    
+
+def write_ingestion_times(timestamps: dict):
+    """updates the the timestamp"""
+    s3.put_object(
+        Bucket=S3_BUCKET,
+        Key="last_ingested.json",
+        Body=json.dumps(timestamps),
+        ContentType="application/json"
+    )
+
 
 def real_main():
     """
@@ -167,21 +193,32 @@ def real_main():
         cursor.execute(
             "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
         )
-        tables = [row[0] for row in cursor.fetchall()]
+        tables = [row[0] for row in cursor.fetchall() if row[0][0] != "_"]
+
+        
 
         total_rows = 0
+        ingestion_times = read_ingestion_times(tables)
+        updated_times = ingestion_times.copy()
         for table in tables:
             logger.info(f"Ingesting table: {table}")
-            cursor.execute(f"SELECT * FROM {table};")
+            last_time = ingestion_times.get(table, "1970-01-01T00:00:00Z")
+            query = f"SELECT * FROM {table} WHERE last_updated > '{last_time}'"
+            cursor.execute(query)
             rows = cursor.fetchall()
 
             if rows:
                 columns = [desc[0] for desc in cursor.description]
                 save_to_s3(table, rows, columns)
+
+                idx = columns.index("last_updated")
+                max_time = max(row[idx] for row in rows if row[idx] is not None)
+                updated_times[table] = max_time.isoformat()
+
                 logger.info(f"Table {table}: {len(rows)} rows exported.")
                 total_rows += len(rows)
             else:
-                logger.info(f"Table {table} is empty.")
+                logger.info(f"Table {table} has no new rows.")
 
         cursor.close()
         conn.close()
@@ -189,6 +226,7 @@ def real_main():
         summary = f"Ingestion completed successfully.\nTables processed: {len(tables)}\nTotal rows: {total_rows}"
         logger.info(summary)
         notify_success(summary)
+        write_ingestion_times(updated_times)
         return {"status": "success", "tables": tables, "total_rows": total_rows}
 
     except Exception as e:
