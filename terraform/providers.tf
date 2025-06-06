@@ -12,7 +12,7 @@ terraform {
   }
 #TODO:
  backend "s3" {
-   bucket = "ingestion-zone-extraction"
+   bucket = "ingestion-bucket-zone-etl-project"
    key = "terraform.tfstate"
    region= "eu-west-2"
    encrypt = true

@@ -1,6 +1,6 @@
 # Create the IAM role that Lambda assumes during execution
 resource "aws_iam_role" "lambda_role" {
-  name = "ingestion_lambda_role"
+  name_prefix = "ingestion_lambda_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -20,7 +20,7 @@ resource "aws_iam_role" "lambda_role" {
 data "aws_iam_policy_document" "s3_document" {
   statement {
     actions   = ["s3:GetObject", "s3:PutObject"]
-    resources = ["${aws_s3_bucket.ingestion_bucket.arn}/*"]
+    resources = ["${data.aws_s3_bucket.ingestion_bucket.arn}/*"]
     effect    = "Allow"
   }
 }

@@ -5,7 +5,7 @@ output "sns_topic_arn" {
 
 # Output the name of the ingestion S3 bucket, which stores processed or raw ingestion data
 output "s3_bucket_name" {
-  value       = aws_s3_bucket.ingestion_bucket.bucket
+  value       = data.aws_s3_bucket.ingestion_bucket.bucket
 }
 
 # output "caller_identity" {

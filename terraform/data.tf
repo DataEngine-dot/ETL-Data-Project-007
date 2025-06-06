@@ -11,6 +11,10 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 
+data "aws_s3_bucket" "ingestion_bucket" {
+  bucket = "ingestion-bucket-zone-etl-project"
+}
+
 # ${data.aws_secretsmanager_secret.db_secret.arn} -> refer to the secretsmanager and get the arn
 
 
