@@ -1,0 +1,37 @@
+# ====================================================================
+# Makefile.oneoff
+#
+# This file is for one-time commands only.
+# Each command here should be run just ONCE for the whole team.
+# Use this file only when the team agrees.
+#
+# WARNING:
+# - These commands can affect all team members!
+# - DO NOT use for regular work or per-person tasks.
+#
+# Steps:
+# 1. Announce in team chat before you run anything here.
+# 2. Run the command ONCE.
+# 3. Tell the team after you run it.
+# ====================================================================
+
+# --------------------------------------------------------------------
+# EXAMPLE: Initialize Terraform backend (for remote state)
+# Use this only when setting up remote backend for the FIRST time.
+# Replace <bucket-name> and <region> with your real values.
+# --------------------------------------------------------------------
+create-tfstate-bucket:
+	aws s3api create-bucket --bucket project-team-07-tfstate --region eu-west-2 --create-bucket-configuration LocationConstraint=eu-west-2
+    @echo "Terraform S3 backend bucket created: project-team-07-tfstate"
+
+
+# --------------------------------------------------------------------
+# EXAMPLE: Create a secrets value in AWS Secrets Manager (first time only)
+# Replace the secret name and secret file as needed.
+# --------------------------------------------------------------------
+create-secrets:
+	aws secretsmanager create-secret --name TotesysDatabase --secret-string file://../secrets/real_secret.json
+	@echo "Secret created in AWS Secrets Manager"
+
+
+.PHONY: create-tfstate-bucket create-secrets 

@@ -1,42 +1,43 @@
-# Generate a unique suffix for S3 bucket name if var.bucket_name is empty
-resource "random_id" "bucket_suffix" {
-  byte_length = 4
+# ------------------------------------------------------------
+# About this Terraform setup
+#
+# You can put all modules (ingestion, transformation, warehouse, step_function)
+# into this main.tf file and run everything from one place.
+#
+# In this project, we did NOT do that.
+# Instead, each module is in its own folder, with its own backend and Makefile.
+#
+# Why? Because:
+# - It is easier for the team: each person works in their own module
+# - No one blocks or breaks the work of others
+# - Good for learning and moving fast
+#
+# If you want, you can put all modules here and manage the whole system together.
+# We did not do that for this project.
+#
+# Look in each module folder for Makefile and instructions.
+# ------------------------------------------------------------
 
-  keepers = {
-    # Trigger regeneration only when no bucket name is provided
-    trigger = var.bucket_name == "" ? timestamp() : ""
-  }
+
+module "shared" {
+  source      = "./shared"
+  bucket_name = var.bucket_name
+  alert_email = var.alert_email
 }
 
-# Create the ingestion S3 bucket, using either a provided name or a unique one
-resource "aws_s3_bucket" "ingestion_bucket" {
-  bucket        = var.bucket_name != "" ? var.bucket_name : "data-ingestion-bucket-${random_id.bucket_suffix.hex}"
-  force_destroy = true  # Allow deletion even if bucket contains objects
+module "ingestion" {
+  source        = "./ingestion"
+  db_host       = var.db_host
+  db_user       = var.db_user
+  db_password   = var.db_password
+  s3_bucket     = module.shared.ingestion_bucket
+  sns_topic     = module.shared.sns_topic
+  lambda_role_arn = module.shared.lambda_role_arn
 }
 
-# Define a bucket policy allowing Lambda, EventBridge, and CloudWatch Logs services access to S3
-resource "aws_s3_bucket_policy" "bucket_policy" {
-  bucket = aws_s3_bucket.ingestion_bucket.id
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Sid       = "AllowServicesAccess"
-        Effect    = "Allow"
-        Principal = {
-          Service = [
-            "lambda.amazonaws.com",
-            "events.amazonaws.com",
-            "logs.amazonaws.com"
-          ]
-        }
-        Action   = [
-          "s3:GetObject",
-          "s3:PutObject"
-        ]
-        Resource = "${aws_s3_bucket.ingestion_bucket.arn}/*"
-      }
-    ]
-  })
+module "step_function" {
+  source = "./step_function"
+  ingestion_lambda_arn        = module.ingestion.lambda_arn
+  transformation_lambda_arn   = module.transformation.lambda_arn
+  warehouse_loader_lambda_arn = module.warehouse_loader.lambda_arn
 }

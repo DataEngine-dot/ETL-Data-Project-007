@@ -1,0 +1,11 @@
+# RDS Database Credentials
+db_user     = "project_team_07"
+db_password = "password"
+db_name     = "totesys"
+db_host     = "nc-data-eng-totesys-production.chpsczt8h1nu.eu-west-2.rds.amazonaws.com"
+db_port     = 5432
+
+bucket_name = "etl-data-project-007"
+alert_email = "your-team@email.com"
+# Optional, only if you want to override default
+aws_region  = "eu-west-2"

@@ -1,9 +1,7 @@
-# Output the ARN of the SNS topic, which can be referenced by other modules or resources
-output "sns_topic_arn" {
-  value       = aws_sns_topic.ingestion_alerts.arn
+output "s3_bucket_name" {
+  value = module.shared.ingestion_bucket
 }
 
-# Output the name of the ingestion S3 bucket, which stores processed or raw ingestion data
-output "s3_bucket_name" {
-  value       = aws_s3_bucket.ingestion_bucket.bucket
+output "sns_topic_arn" {
+  value = module.shared.sns_topic
 }

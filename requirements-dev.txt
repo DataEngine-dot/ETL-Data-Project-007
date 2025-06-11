@@ -1,0 +1,21 @@
+# Base dependencies (imported from prod)
+-r requirements.txt
+
+python-dotenv
+
+# Testing
+pytest
+pytest-cov
+
+# Linting
+flake8
+black
+
+# Optional type checking
+mypy
+
+# Optional security scanner
+bandit
+
+# Optional: check for unused imports, formatting etc.
+ruff

@@ -1,37 +1,55 @@
-# Crash log files
-crash.log
-
-# pycache
-*/__pycache__/
-*/.pytest_cache
-__pycache__/
-
-# venv
-venv/
-
-# env
-.env
-.env.test
-
-# Other files
-.DS_Store
-.coverage
-
-# Terraform lock file
-**/.terraform.lock.hcl
-
-# Local .terraform directories
-**/.terraform/*
-
-# .tfstate files
+# Terraform state files
 *.tfstate
 *.tfstate.*
+.terraform/
+.terraform.lock.hcl
 
+*.tfvars
+**/*.tfvars
+
+# Terraform variable definitions (potential secrets)
 terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+*.tfvars
 
-# Ignore build artifacts
+# Secrets files
+secrets.tfvars
+terraform/secrets.tfvars
+*.secrets.tfvars
+*.secrets.tfvars.json
+secrets/real_secret.json
+
+# Environment variables
+.env
+.env.*
+*.env
+
+# Crash logs
+crash.log
+
+# Python caches
+__pycache__/
+*/__pycache__/
+*/.pytest_cache
+
+# Virtual environments
+venv/
+.env/
+
+# MacOS
+.DS_Store
+
+# Coverage
+.coverage
+
+# Build artifacts
 builds/
 *.zip
 
+# Lambda build
 /package/
 lambda_build/
+lambda_build_transformation/
+lambda_build_warehouse
