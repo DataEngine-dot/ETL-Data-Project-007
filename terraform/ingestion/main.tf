@@ -12,7 +12,7 @@ resource "aws_lambda_function" "ingestion" {
   role          = var.lambda_role_arn
   handler       = "ingestion.main"
   runtime       = "python3.11"
-  timeout       = 60
+  timeout       = 800
 
   s3_bucket         = var.s3_bucket
   s3_key            = aws_s3_object.lambda_zip.key
@@ -29,27 +29,6 @@ resource "aws_lambda_function" "ingestion" {
       LOG_GROUP     = "/aws/lambda/ingestion-lambda"
     }
   }
-}
-
-# EventBridge rule to run every 10 minutes
-resource "aws_cloudwatch_event_rule" "lambda_schedule" {
-  name                = "every-10-minutes"
-  schedule_expression = "rate(10 minutes)"
-}
-
-resource "aws_cloudwatch_event_target" "lambda_trigger" {
-  rule      = aws_cloudwatch_event_rule.lambda_schedule.name
-  target_id = "lambda"
-  arn       = aws_lambda_function.ingestion.arn
-}
-
-# Permission for EventBridge to invoke the Lambda
-resource "aws_lambda_permission" "allow_eventbridge" {
-  statement_id  = "AllowExecutionFromEventBridge"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.ingestion.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.lambda_schedule.arn
 }
 
 # CloudWatch Log Group for Lambda logs

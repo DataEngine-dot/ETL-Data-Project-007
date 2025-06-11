@@ -1,173 +1,200 @@
-# 🛠️ ToteSys ETL Pipeline (AWS + Terraform + Python)
+# ToteSys ETL Pipeline (AWS + Terraform + Python)
 
-## 📌 Project Description
+## Project Purpose
 
-This project is an **ETL (Extract–Transform–Load)** pipeline using AWS and Python.  
-We read data from ToteSys database, save it to S3, transform it, and finally load it into a data warehouse.
+This project is an **ETL (Extract–Transform–Load) data pipeline** for ToteSys, designed to automate the movement and transformation of data from a production PostgreSQL database to a cloud-based data warehouse.
+The system is modular, production-ready, and supports parallel team development using AWS Lambda, S3, and Terraform.
 
----
+## Tech Stack and Dependencies
 
-## 🧱 Architecture
+* **Python** (3.11 recommended)
+* **AWS** (Lambda, S3, CloudWatch, SNS, IAM, Step Functions)
+* **Terraform** (1.4+)
+* **pg8000** (PostgreSQL driver for Python)
+* **pytest** (for testing)
+* **flake8** / **black** (for linting and code style)
+* **bandit** (for security scanning)
+* **pip-audit** (optional, package vulnerability checks)
+
+> Other dependencies are managed via `requirements.txt` and `requirements-dev.txt`.
+
+## Architecture
 
 ```
-ToteSys DB --> Ingestion (Lambda) --> Transformation (Lambda) --> Data Warehouse
-                 |                        |
-              S3 + SNS                 S3 (Parquet)
+ToteSys Database
+        |
+   Ingestion Lambda
+        |
+        v
+       S3 (Raw Data)
+        |
+Transformation Lambda
+        |
+        v
+     S3 (Processed Data)
+        |
+Warehouse Loader Lambda
+        |
+        v
+ Data Warehouse (PostgreSQL)
 ```
 
----
+* Each Lambda runs independently and communicates via S3 and event payloads.
+* State and incremental loading supported via S3 state files.
 
-## ✨ Key Features
+## Setup Instructions
 
-- Independent infrastructure for each module (no blocking between team members)
-- One S3 bucket for all Terraform state files, but each module uses its own state file (backend)
-- **Quick parallel deployment:** Everyone can work on their part at the same time!
-- AWS Lambda for scheduled ingestion and processing
-- CloudWatch and SNS alerting
-- Automated tests (pytest), code linting, and security checks
-- Modular structure for fast development
-
----
-
-## 🚀 Quick Start / Deployment
-
-### 1. Clone and prepare environment
+### 1. Clone the Repository
 
 ```bash
-git clone <repo_url>
+git clone <your_repo_url>
 cd totesys-etl-pipeline
-cp .env.example .env
 ```
 
-### 2. Set up Python environment
+### 2. Python Environment and Dependencies
 
 ```bash
-make venv
-make install         # For production dependencies
-make dev-install     # For development and testing tools
+make venv           # Create virtual environment (using venv)
+make install        # Install production dependencies
+make dev-install    # Install dev/testing tools (pytest, flake8, etc.)
 ```
 
-### 3. Create S3 bucket for Terraform backend (ONE TIME, whole team)
-One person should run this and tell the team after:
+### 3. Configure AWS Credentials
+
+Set up your AWS CLI profile with credentials that have permission to manage S3, Lambda, IAM, etc.
+
+```bash
+aws configure
+# Enter Access Key, Secret Key, region: eu-west-2, output: json
+```
+
+### 4. Prepare Secrets and Variables
+
+Copy example secrets/vars and fill in real values (do not commit real secrets):
+
+```bash
+cp terraform/secrets.tfvars.example terraform/secrets.tfvars
+# Edit terraform/secrets.tfvars with your actual DB/Warehouse credentials and alert email
+```
+
+### 5. Terraform Backend Bucket (ONE TIME)
+
+Create the S3 bucket for Terraform state storage (do this once for the whole team):
 
 ```bash
 make -f scripts/Makefile.oneoff create-tfstate-bucket
 ```
 
-> This creates the S3 bucket `my-totesys-tfstate` to store Terraform state files for all modules.
+> The default bucket name is `project-team-07-tfstate`.
 
----
+### 6. Initialize Terraform Modules
 
-### 4. Backend configuration for each Terraform module
+Each module (`shared`, `ingestion`, `transformation`, `warehouse_loader`, `step_function`) has its own folder, backend, and Makefile.
 
-Each module (`shared`, `ingestion`, `transformation`, `warehouse_loader`) has its own `backend.tf` file.  
-**Do not use the same "key" in two places!**  
-**This lets each person deploy/apply/destroy their module without blocking others.**
-
-Example for ingestion:
-```hcl
-terraform {
-  backend "s3" {
-    bucket = "my-totesys-tfstate"
-    key    = "ingestion/terraform.tfstate"
-    region = "eu-west-2"
-  }
-}
-```
-(Already included for you in the repo.)
-
----
-
-### 5. Initialize backend and deploy your own module
-
-Each team member goes into their own folder and runs:
+To deploy a module (for example, ingestion):
 
 ```bash
-cd terraform/<your_module>
-terraform init
-terraform plan -var-file="secrets.tfvars"
-terraform apply -var-file="secrets.tfvars" -auto-approve
+cd terraform/ingestion
+make init
+make generate-tfvars
+make build
+make plan
+make apply
 ```
-- You can also use the Makefile in each folder:  
-  `make init`  
-  `make plan`  
-  `make apply`
 
----
-
-### 6. Run and test your code
+Or, for most modules, just:
 
 ```bash
-make test       # Run all tests (pytest)
-make lint       # Lint code (flake8)
-make format     # Format code (black)
+make deploy
 ```
 
----
+**Never use the same backend `key` in more than one module!**
+Each module should have a unique state file.
 
-## 🏗️ Project Structure
+### 7. Deploy the Shared Infrastructure (S3, IAM, SNS, etc.)
+
+```bash
+cd terraform/shared
+make init
+make plan
+make apply
+```
+
+### 8. Deploy and Test All Pipeline Modules
+
+Repeat for each of the following (in their respective directories):
+
+* ingestion
+* transformation
+* warehouse\_loader
+* step\_function
+
+**Always use the Makefile in the module directory for convenience and to avoid mistakes.**
+
+## Testing and Linting
+
+To run tests and check code style, from the project root:
+
+```bash
+make test       # Runs all pytest tests
+make lint       # Run flake8 linter
+make format     # Auto-format code with black
+make check-format  # Check code formatting without changing files
+make bandit     # Run security checks
+```
+
+## Typical Development and Deployment Workflow
+
+1. Pull the latest changes from git.
+2. Create or update your virtual environment (`make venv`).
+3. Install or update dependencies (`make install` or `make dev-install`).
+4. Check/update secrets in `terraform/secrets.tfvars`.
+5. Use the Makefile in your module folder to build, plan, and apply Terraform.
+6. Monitor your Lambda and S3 output via AWS Console.
+
+## Project Structure
 
 ```
-terraform/
-├── shared/            # S3 bucket, SNS, IAM (one person manages)
-├── ingestion/         # Ingestion Lambda and triggers
-├── transformation/    # Transformation Lambda
-├── warehouse_loader/  # Load data into warehouse
+/terraform/
+  shared/            # Shared resources: S3, IAM, SNS
+  ingestion/         # Ingestion Lambda, triggers, backend
+  transformation/    # Transformation Lambda, backend
+  warehouse_loader/  # Loader Lambda, backend
+  step_function/     # Orchestration (Step Functions)
+builds/              # Lambda deployment packages (created by Makefiles)
+lambda_build/        # Temporary build directories
+utils/               # (Optional) Python shared utilities
+requirements.txt     # Production Python dependencies
+requirements-dev.txt # Dev/testing/linting dependencies
+secrets.tfvars.example  # Example secrets file
 ```
 
-Each module is independent!  
-**Do not destroy or apply other people's modules.**
+## Team/Collaboration Conventions
+
+* Only one person manages `shared/` (S3, IAM, SNS).
+* Announce in chat before running any "one-off" (see `scripts/Makefile.oneoff`).
+* Never destroy or apply another person's module without their consent.
+* Each person works in their own module, using a unique backend key.
+* Commit only your code and configs, **never commit secrets or `.tfvars` files**.
+
+## Troubleshooting
+
+* If you get a Terraform state lock error:
+  Someone else is running `terraform apply` in that folder. Wait and try again.
+* If a Lambda or infra resource fails to deploy, check the AWS Console logs and CloudWatch for errors.
+* For questions about backend configuration, environment variables, or credentials, ask in team chat.
+
+## Contribution and Extending
+
+* To add new tables or data sources, update the ingestion/extraction scripts and add corresponding transforms.
+* To extend the pipeline (e.g. add reporting or BI), add new Lambda modules or extend the warehouse loader logic.
+* All new code must include tests (`pytest`), pass lint (`flake8`), and be formatted (`black`).
+
+## License and Contact
+
+For help or issues, reach out via your team Slack/Discord or GitHub Issues.
+Project maintained by ToteSys Data Engineering Team.
 
 ---
 
-## 📁 Terraform Backend: How it works
-
-- One S3 bucket: `my-totesys-tfstate`
-- Each module: different "key" (state file)
-    - Example: `ingestion/terraform.tfstate`
-- Everyone works in their own module, at the same time, without blocking.
-
-**How to use:**
-1. Go to your module folder (for example: `cd terraform/ingestion`)
-2. Run `terraform init` (first time)
-3. Now you can plan, apply, or destroy only your module
-
----
-
-## 🧪 Testing & Security
-
-- Tests: `pytest` in the `tests/` folder
-- Lint: `flake8`
-- Format: `black`
-- Security: `bandit`, `pip-audit`
-
----
-
-## 🔐 Email Alerts
-
-- Configure your alert email in `terraform/secrets.tfvars`
-- **Do not commit secrets.tfvars to git!**
-- After first deploy, check your email and confirm the AWS subscription for alerts.
-
----
-
-## 📣 Notes for Team
-
-- Only one person should manage `shared/` module (S3 bucket, IAM, SNS).
-- Announce in chat before running any "one-off" command (see `scripts/Makefile.oneoff`).
-- **Do not destroy another person's module.** Each person manages their own part.
-
----
-
-## 🆘 Troubleshooting
-
-- If you see a "state lock" error, check if someone else is running `terraform apply` in the same folder.
-- If unsure about backend or deployment, ask in team chat.
-
----
-
-## 📬 Contact
-
-For help or questions, reach out in your team chat or GitHub Issues.
-
----
+Let me know if you want this README in Markdown format with the file name (`README.md`) or if you want any part simplified further for onboarding juniors!
