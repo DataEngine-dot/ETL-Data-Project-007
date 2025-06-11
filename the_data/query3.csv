@@ -1,0 +1,34 @@
+        city        |                country                | total_sales 
+--------------------+---------------------------------------+-------------
+ Fort Shadburgh     | Bosnia and Herzegovina                | 78557385.58
+ Suffolk            | United Kingdom                        | 78076316.68
+ Fresno             | Bolivia                               | 77753076.50
+ Shanahanview       | Bouvet Island (Bouvetoya)             | 77513470.13
+ Utica              | Austria                               | 77024190.86
+ East Arvel         | Sudan                                 | 76972529.59
+ Beaulahcester      | Democratic People's Republic of Korea | 76407278.38
+ Hackensack         | Indonesia                             | 75614421.45
+ Derekport          | Papua New Guinea                      | 75399772.30
+ East Bobbie        | Heard Island and McDonald Islands     | 75214104.18
+ New Torrance       | Antigua and Barbuda                   | 75047109.84
+ Bartellview        | Congo                                 | 74670815.10
+ Lake Charles       | Samoa                                 | 74605684.92
+ Lake Myrlfurt      | Falkland Islands (Malvinas)           | 74424454.14
+ Lake Arne          | Kiribati                              | 73751974.05
+ Maggiofurt         | Iraq                                  | 73377949.13
+ Napa               | American Samoa                        | 73354527.37
+ South Wyatt        | Iceland                               | 72462369.26
+ Aliso Viejo        | San Marino                            | 72423579.86
+ New Tyra           | Australia                             | 72398452.94
+ Oakland Park       | Guam                                  | 72241053.43
+ North Deshaun      | Faroe Islands                         | 71620231.56
+ West Briellecester | Sierra Leone                          | 71347573.66
+ Sayreville         | Svalbard & Jan Mayen Islands          | 70849430.87
+ Olsonside          | Republic of Korea                     | 70652575.10
+ Corpus Christi     | Japan                                 | 70283706.87
+ Pueblo             | Republic of Korea                     | 70019971.08
+ Kendraburgh        | Zimbabwe                              | 69501324.27
+ Pricetown          | Tajikistan                            | 67650547.78
+ New Patienceburgh  | Turkey                                | 66787937.39
+(30 rows)
+
