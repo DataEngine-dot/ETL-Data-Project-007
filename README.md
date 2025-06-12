@@ -194,7 +194,3 @@ secrets.tfvars.example  # Example secrets file
 
 For help or issues, reach out via your team Slack/Discord or GitHub Issues.
 Project maintained by ToteSys Data Engineering Team.
-
----
-
-Let me know if you want this README in Markdown format with the file name (`README.md`) or if you want any part simplified further for onboarding juniors!
